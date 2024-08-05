@@ -1,0 +1,451 @@
+tools:
+  teamviewer:
+    description: |
+      TeamViewer is a remote access and remote control software available on various platforms. It provides detailed logs of remote connections, including user activities and session details.
+    references:
+      - "https://www.synacktiv.com/publications/legitimate-rats-a-comprehensive-forensic-analysis-of-the-usual-suspects"
+      - "https://github.com/mthcht/awesome-lists/Lists/RMM/teamviewer/"
+      - "https://community.teamviewer.com/English/discussion/5523/security-related-logs-and-monitoring"
+      - "https://benleeyr.wordpress.com/2020/05/19/teamviewer-forensics-tested-on-v15/"
+      - "https://0xdf.gitlab.io/2023/12/14/htb-sherlock-tick-tock.html"
+      
+artifacts:
+  teamviewer:
+    log_files:
+      - path: "*:\\Program Files (x86)\\TeamViewer\\Connections_incoming.txt"
+        timestamp_format: "DD-MM-YYYY HH:MM:SS (UTC)"
+        notes: |
+          This log records incoming connections to the TeamViewer client. After the progam is removed this log file will persist untill a reboot. Fields and their values are:
+          - **Client ID**: Numeric identifier of the remote machine (e.g., 1025538549).
+          - **Client Hostname**: Hostname of the remote machine (e.g., mechant_host).
+          - **Start Date**: Date when the connection started (DD-MM-YYYY format, e.g., 22-08-2022).
+          - **Start Time**: Time when the connection started (HH:MM:SS format, e.g., 14:50:52).
+          - **End Date**: Date when the connection ended (DD-MM-YYYY format, e.g., 22-08-2022).
+          - **End Time**: Time when the connection ended (HH:MM:SS format, e.g., 14:51:09).
+          - **Local User**: Username on the local machine (e.g., lab).
+          - **Connection Type**: Type of connection (e.g., RemoteControl).
+          - **Session ID**: Unique identifier for the session (e.g., {5a0ba592-76be-48de-8015-2365251d6520}).
+
+          **Example**:
+          ```
+          229706443	DESKTOP-evilman	19-07-2024 23:54:08	19-07-2024 23:59:14	mthcht	RemoteControl	{d935bfe3-5fdd-4933-80bc-ae356e786c03}	
+          ```  
+        logformat: <remote machine client ID> <Remote machine Hostname> <Start Date/Time UTC> <End Date/time UTC> <Local User on local machine> <Connection Type> <Session ID>
+      - path: "*:\\Program Files (x86)\\TeamViewer\\TeamViewer*_Logfile.log"
+        timestamp_format: "YYYY/MM/DD HH:MM:SS.SSS (timezone included)"
+        notes: |
+          This log provides detailed session information, including:
+          - **Date and Time**: Timestamp of the log entry (e.g., 2024/01/02 15:00:00.000).
+          - **Log Level**: Severity of the log entry (e.g., INFO, WARN, ERROR).
+          - **Message**: Details about session initiation, data transfer activities, and errors/warnings.
+          - Failed Connection Attempts: Search for “Trying connection to <Destination TeamViewer ID>” to find attempts.
+          - Public IP Address Identification: Search for “punch received” to find external IP addresses from connections.
+          - Successful Session Identification: Search for “New Participant added in CParticipantManager” to identify session details.
+          - Source TeamViewer ID: Search for “Login::Identify” to find the source PC’s TeamViewer ID.
+
+          **Example**:
+          ```
+          2022/08/22 16:50:52.967  3476  1492 S0   CommandHandlerRouting[19]::CreatePassiveSession(): incoming session via fr-par-anx-r008.router.teamviewer.com, protocol Port443
+          2022/08/22 16:50:59.262  3476  3652 S0   CPersistentParticipantManager::AddParticipant: [1025212365,-305204839] type=3 name=LABWINDOWS
+          2022/08/22 16:51:09.752  6092  7464 D1   SessionManagerDesktop::SessionTerminate: removing session with tvsessionprotocol::TVSessionID = -305204839
+          ```
+      - path: "*:\\Program Files\\TeamViewer\\Connections_incoming.txt"
+        timestamp_format: "DD-MM-YYYY HH:MM:SS (UTC)"
+        notes: |
+          This log records incoming connections to the TeamViewer client. After the progam is removed this log file will persist untill a reboot. Fields and their values are:
+          - **Client ID**: Numeric identifier of the remote machine (e.g., 1025538549).
+          - **Client Hostname**: Hostname of the remote machine (e.g., mechant_host).
+          - **Start Date**: Date when the connection started (DD-MM-YYYY format, e.g., 22-08-2022).
+          - **Start Time**: Time when the connection started (HH:MM:SS format, e.g., 14:50:52).
+          - **End Date**: Date when the connection ended (DD-MM-YYYY format, e.g., 22-08-2022).
+          - **End Time**: Time when the connection ended (HH:MM:SS format, e.g., 14:51:09).
+          - **Local User**: Username on the local machine (e.g., lab).
+          - **Connection Type**: Type of connection (e.g., RemoteControl).
+          - **Session ID**: Unique identifier for the session (e.g., {5a0ba592-76be-48de-8015-2365251d6520}).
+
+          **Example**:
+          ```
+          229706443	DESKTOP-evilman	19-07-2024 23:54:08	19-07-2024 23:59:14	mthcht	RemoteControl	{d935bfe3-5fdd-4933-80bc-ae356e786c03}	
+          ```  
+      - path: "*:\\Program Files\\TeamViewer\\TeamViewer*_Hooks.log"
+        timestamp_format: "YYYY/MM/DD HH:MM:SS (UTC)"
+        notes: |
+          This log records driver installations and is not of particular interest
+          **Example**:
+          ```
+          2024/07/20 01:55:50.974  9476  9896 L64  Loader started with: "C:\Program Files\TeamViewer\tv_x64.exe" --action uninstallpnpdriver --inf "C:\Program Files\TeamViewer\x64\TVVirtualMonitorDriver.inf" --log "C:\Program Files\TeamViewer\TeamViewer15_Hooks.log"
+          2024/07/20 01:55:51.397  9476  9896 L64  CDriverInstaller: Uninstall driver from PnP storage succeed, no restart requested
+          2024/07/20 01:55:51.397  9476  9896 L64  Uninstall driver from PnP storage Succeed
+          2024/07/20 01:55:51.677  1436  7988 L64  Loader started with: "C:\Program Files\TeamViewer\tv_x64.exe" --action installpnpdriver --inf "C:\Program Files\TeamViewer\x64\TVVirtualMonitorDriver.inf" --log "C:\Program Files\TeamViewer\TeamViewer15_Hooks.log"
+          2024/07/20 01:55:52.271  1436  7988 L64  CDriverInstaller: Install driver to PnP storage succeed, no restart requested
+          2024/07/20 01:55:52.271  1436  7988 L64  Install driver in PnP storage Succeed
+          2024/07/20 01:55:52.366  1980  1296 L64  Loader started with: "C:\Program Files\TeamViewer\tv_x64.exe" --action removeprint --log "C:\Program Files\TeamViewer\TeamViewer15_Hooks.log" --event Local\DriverInstallFinishEvent_Printer --id "TeamViewer Printer"
+          2024/07/20 01:55:52.380  8088  9568 L64  Loader started with: "C:\Program Files\TeamViewer\tv_x64.exe" --action installprinterdriverfrompackage --log "C:\Program Files\TeamViewer\TeamViewer15_Hooks.log" --event Local\DriverInstallFinishEvent_Printer --inf "C:\Program Files\TeamViewer\Printer\TeamViewer_XPSDriverFilter.inf" --id "TeamViewer Printer"
+          2024/07/20 01:55:52.443  1980  1296 L64  RemovePrintDriver success
+          2024/07/20 01:55:52.443  1980  1296 L64  CDriverInstaller: Event set
+          2024/07/20 01:55:52.522  8088  9568 L64  CDriverInstaller::InstallPrintDriverFromPackage: Upload successful
+          2024/07/20 01:55:52.616  8088  9568 L64  CDriverInstaller::InstallPrintDriverFromPackage: Install successful
+          2024/07/20 01:55:52.616  8088  9568 L64  InstallPrintDriverFromPackage success
+          2024/07/20 01:55:52.616  8088  9568 L64  CDriverInstaller: Event set
+          ```  
+      - path: "*:\\Program Files\\TeamViewer\\TeamViewer*_Logfile.log"
+        timestamp_format: "YYYY/MM/DD HH:MM:SS.SSS (timezone included)"
+        notes: |
+          This log provides detailed session information, including:
+          - **Date and Time**: Timestamp of the log entry (e.g., 2024/01/02 15:00:00.000).
+          - **Log Level**: Severity of the log entry (e.g., INFO, WARN, ERROR).
+          - **Message**: Details about session initiation, data transfer activities, and errors/warnings.
+          - Failed Connection Attempts: Search for “Trying connection to <Destination TeamViewer ID>” to find attempts.
+          - Public IP Address Identification: Search for “punch received” to find external IP addresses from connections.
+          - Successful Session Identification: Search for “New Participant added in CParticipantManager” to identify session details.
+          - Source TeamViewer ID: Search for “Login::Identify” to find the source PC’s TeamViewer ID.
+
+          **Example**:
+          ```
+          2022/08/22 16:50:52.967  3476  1492 S0   CommandHandlerRouting[19]::CreatePassiveSession(): incoming session via fr-par-anx-r008.router.teamviewer.com, protocol Port443
+          2022/08/22 16:50:59.262  3476  3652 S0   CPersistentParticipantManager::AddParticipant: [1025212365,-305204839] type=3 name=LABWINDOWS
+          2022/08/22 16:51:09.752  6092  7464 D1   SessionManagerDesktop::SessionTerminate: removing session with tvsessionprotocol::TVSessionID = -305204839
+          ```
+      - path: "*:\\Users\\*\\AppData\\Roaming\\TeamViewer\\connections.txt"
+        timestamp_format: "DD-MM-YYYY HH:MM:SS (UTC)"
+        notes: |
+          This log records successful outgoing connection details.
+          - Outgoing TeamViewer ID (your PC’s ID)
+          - UTC Start and End Date/Time of the connection
+          - Logged-in user on the PC
+          - Type of connection
+          - Unique connection ID
+          - The text file's last modified date/time indicates the last successful outgoing connection.
+          Fields include:
+          - **Remote ID**: Numeric identifier of the remote machine (e.g., 7654321).
+          - **Start Date**: Date when the connection started (DD-MM-YYYY format, e.g., 19-07-2024).
+          - **Start Time**: Time when the connection started (HH:MM:SS format, e.g., 23:56:51).
+          - **End Date**: Date when the connection ended (YYYY-MM-DD format, e.g., 2024-01-01).
+          - **End Time**: Time when the connection ended (HH:MM:SS format, e.g., 15:00:00).
+          - **Local User**: Username on the local machine (e.g., admin).
+          - **Connection Type**: Type of connection (e.g., remote_control, file_transfer).
+          - **Session ID**: Unique identifier for the connection session (e.g., 123456789).
+
+          **Example**:
+          ```
+          1460237962                      19-07-2024 23:56:51             20-07-2024 00:01:56             admin                           RemoteControl                   {d935bfe3-5fdd-4933-80bc-ae356e786c03}
+          ```
+      - path: "*:\\Users\\*\\AppData\\Roaming\\TeamViewer\\TeamViewer*_Logfile.log"
+        timestamp_format: "YYYY/MM/DD HH:MM:SS.SSS (timezone unknown)"
+        notes: |
+          This general log provides software information, including:
+          - **Date and Time**: Timestamp of the log entry (e.g., 2024/01/01 14:00:00.000).
+          - **Log Level**: Severity of the log entry (e.g., INFO, WARN, ERROR).
+          - **Message**: Details about the status of connections, software updates, configuration changes, and other operational details.
+
+          **Example**:
+          ```
+          2024/01/01 14:00:00.000 [INFO] Software update completed
+          2024/01/01 14:05:00.000 [WARN] Connection attempt failed for ID 1234567
+          ```
+      - path: "*:\\Program Files\\TeamViewer\\Version.txt"
+        notes: |
+          This log provides the installation date and version of teamviewer:
+          **Example**:
+          ```
+          FIXME
+          ```
+      - path: "*:\\Program Files (x86)\\TeamViewer\\Version.txt"
+        notes: |
+          This log provides the installation date and version of teamviewer:
+          **Example**:
+          ```
+          FIXME
+          ```
+      - path: "*:\\Users\\*\\AppData\\Local\\Temp\\TeamViewer\\TV*Install.log"
+        notes: |
+          this file is used during installation, and does not persist. It can be useful to determine the exact date of installation, the version, and user who triggered it.
+          **Example**:
+          ```
+          FIXME
+          ```
+      - path: "*:\\Users\\*\\AppData\\Roaming\\TeamViewer\\TeamViewerOutlookAddIn_Logfile.log"
+        notes: |
+          - Contains UTC date/time when the addin was launched.
+          - Indicates that TeamViewer Outlook Addin launches with Outlook.
+          - The log file’s last modified date/time shows when Outlook was last launched.
+          **Example**:
+          ```
+          FIXME
+          ```
+
+
+  registry:
+    - path: "HKLM\\SOFTWARE\\TeamViewer"
+      notes: |
+        - Validate the presence of TeamViewer
+        - Check the earliest and last modification date of the registry key
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer"
+      notes: |
+        - Confirm the presence of TeamViewer.
+        - Check the earliest and last modification date of the registry key (portable version of teamviewer)
+    - path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\TeamViewer"
+      notes: |
+        - Confirm the presence of TeamViewer.
+        - Check the last modification date of the registry key (teamviewer service installed - also observed in Security EventID 4697 and System EventID 7045)
+    - path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\TeamViewer VPN Adapter"
+      notes: |
+        - Confirm the presence of TeamViewer.
+        - Check the last modification date of the registry key (teamviewer service installed - also observed in Security EventID 4697 and System EventID 7045)
+    - path: "HKLM\\SYSTEM\\ControlSet001\\Services\\TeamViewer"
+      notes: |
+        - Confirm the presence of TeamViewer.
+        - Check the last modification date of the registry key (teamviewer service installed - also observed in Security EventID 4697 and System EventID 7045)
+    - path: "HKLM\\SYSTEM\\ControlSet001\\Services\\TeamViewer VPN Adapter"
+      notes: |
+        - Confirm the presence of TeamViewer.
+        - Check the last modification date of the registry key (teamviewer service installed - also observed in Security EventID 4697 and System EventID 7045)
+    - path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeamViewer\\*"
+      notes: | 
+        - Confirm the presence of TeamViewer.
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\MainWindowHandle"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Target side - computer being controlled remotely).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\DesktopWallpaperSingleImage"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Target side - computer being controlled remotely).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\DesktopWallpaperSingleImagePath"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Target side - computer being controlled remotely).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\DesktopWallpaperSingleImagePosition"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Target side - computer being controlled remotely).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\MinimizeToTray"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Target side - computer being controlled remotely).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\MultiMedia\\AudioUserSelectedCapturingEndpoint"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Target side - computer being controlled remotely).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\MultiMedia\\AudioSendingVolumeV2"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Target side - computer being controlled remotely).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\MultiMedia\\AudioUserSelectedRenderingEndpoint"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Target side - computer being controlled remotely).
+    - path: "HKLM\\SOFTWARE\\TeamViewer\\ConnectionHistory"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Client side - computer initiating the connection).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\ClientWindow_Mode"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Client side - computer initiating the connection).
+    - path: "HKU\\*\\SOFTWARE\\TeamViewer\\ClientWindowPositions"
+      notes: | 
+        - Added and modified while using TeamViewer, allowing proof of TeamViewer execution at some point (Client side - computer initiating the connection).
+
+  other_files:
+    - path: "*:\\Users\\*\\AppData\\Local\\TeamViewer\\Database\\tvchatfilecache.db"
+      notes: | 
+        - SQLite 3 database used for caching TeamViewer chat data. Note: It may not always contain chat logs, even if a chat session has been initiated (need to be investigated)
+    - path: "*:\\Users\\*\\AppData\\Local\\TeamViewer\\RemotePrinting\\tvprint.db"
+      notes: | 
+        - SQLite 3 database storing TeamViewer print jobs (Target side - computer being controlled remotely)
+    - path: "*\\Windows\\Prefetch\\TEAMVIEWER.EXE-*.pf"
+      notes: | 
+        - Prefetch file - proof of execution
+    - path: "*\\Windows\\Prefetch\\TEAMVIEWER_SERVICE.EXE-*.pf"
+      notes: | 
+        - Prefetch file - proof of execution
+    - path: "*\\Windows\\Prefetch\\TEAMVIEWER_DESKTOP.EXE-*.pf"
+      notes: | 
+        - Prefetch file - proof of execution
+    - path: "*\\Windows\\Prefetch\\TEAMVIEWER_SETUP.EXE-*.pf"
+      notes: | 
+        - Prefetch file - proof of execution
+    - path: "*:\\Users\\*\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\TeamViewer.lnk"
+      notes: | 
+        - Shortcut file indicating TeamViewer is installed and set to start at boot
+    - path: "*:\\Users\\*\\AppData\\Roaming\\TeamViewer\\MRU\\RemoteSupport\\*"
+      notes: | 
+        - Folder contains <TeamViewer ID>.tvc files for successful connections.
+        - Files listed under "Partner ID" in the TeamViewer GUI.
+        - Content:
+          - targetID: Target’s TeamViewer ID.
+          - action: Connection type (e.g., RemoteSupport).
+        - File names can be changed; TeamViewer uses targetID for the dropdown list in the GUI.
+        **Example of a tvc file content**:
+        ```
+        [TeamViewer Configuration]
+        targetID=192.168.1.3
+        action=RemoteSupport
+        ```
+
+detection: |
+  - https://github.com/mthcht/awesome-lists/tree/main/Lists/RMM/teamviewer
+
+splunk_conf_indexes: |
+  [teamviewer]
+  homePath = $SPLUNK_DB/teamviewer/db
+  coldPath = $SPLUNK_DB/teamviewer/colddb
+  thawedPath = $SPLUNK_DB/teamviewer/thaweddb
+
+splunk_conf_inputs: |
+  [monitor://C:\Program Files (x86)\TeamViewer\Connections_incoming.txt]
+  disabled = false
+  sourcetype = teamviewer:connections_incoming
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor://C:\Program Files (x86)\TeamViewer\TeamViewer*_Logfile.log]
+  disabled = false
+  sourcetype = teamviewer:logfile
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor://C:\Program Files\TeamViewer\Connections_incoming.txt]
+  disabled = false
+  sourcetype = teamviewer:connections_incoming
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor://C:\Program Files\TeamViewer\TeamViewer*_Logfile.log]
+  disabled = false
+  sourcetype = teamviewer:logfile
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor://C:\Users\*\AppData\Roaming\TeamViewer\connections.txt]
+  disabled = false
+  sourcetype = teamviewer:connections
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor://C:\Users\*\AppData\Roaming\TeamViewer\TeamViewer*_Logfile.log]
+  disabled = false
+  sourcetype = teamviewer:logfile
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor:///var/log/teamviewer/Connections_incoming.txt]
+  disabled = false
+  sourcetype = teamviewer:connections_incoming
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor:///var/log/teamviewer/TeamViewer*_Logfile.log]
+  disabled = false
+  sourcetype = teamviewer:logfile
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor://$HOME/Library/Logs/TeamViewer/Connections_incoming.txt]
+  disabled = false
+  sourcetype = teamviewer:connections_incoming
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+  
+  [monitor://$HOME/Library/Logs/TeamViewer/TeamViewer*_Logfile.log]
+  disabled = false
+  sourcetype = teamviewer:logfile
+  index = teamviewer
+  crcSalt = <SOURCE>
+  initCrcLength = 2048
+  followTail = 0
+  charset = auto
+  host = $decideOnStartup
+  start_from = oldest
+
+  
+splunk_conf_props: |
+  [teamviewer:connections_incoming]
+  KV_MODE = none
+  TIME_PREFIX = ^\d+\s
+  TIME_FORMAT = %d-%m-%Y %H:%M:%S
+  MAX_TIMESTAMP_LOOKAHEAD = 20
+  SHOULD_LINEMERGE = false
+  REPORT-teamviewer = teamviewer_extractions_connections_incoming
+  
+  [teamviewer:logfile]
+  KV_MODE = none
+  TIME_PREFIX = ^
+  TIME_FORMAT = %Y/%m/%d %H:%M:%S.%3N
+  MAX_TIMESTAMP_LOOKAHEAD = 23
+  SHOULD_LINEMERGE = false
+  REPORT-teamviewer-logfile = teamviewer_extractions_logfile, teamviewer_extractions_logfile_ip, teamviewer_extractions_logfile_failed_connection, teamviewer_extractions_logfile_successful_session, teamviewer_extractions_logfile_source_teamviewer_id
+  
+  [teamviewer:connections]
+  KV_MODE = none
+  TIME_PREFIX = ^\d+\s+
+  TIME_FORMAT = %d-%m-%Y %H:%M:%S
+  MAX_TIMESTAMP_LOOKAHEAD = 20
+  SHOULD_LINEMERGE = false
+  REPORT-teamviewer-connections = teamviewer_extractions_connections
+
+  
+splunk_conf_transforms: |
+  [teamviewer_extractions_connections_incoming]
+  REGEX = ^(?P<session_id>\d+)\s+(?P<src_nt_host>[^\s]+)\s+(?P<start_time>\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}:\d{2})\s+(?P<end_time>\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}:\d{2})\s+(?P<dest_user>[^\s]+)\s+(?P<action>[^\s]+)\s+(?P<session_guid>\{[^\}]+\})
+  FORMAT = session_id::$1 src_nt_host::$2 start_time::$3 end_time::$4 dest_user::$5 action::$6 session_guid::$7
+  
+  [teamviewer_extractions_logfile]
+  REGEX = ^(?P<start_time>\d{4}/\d{2}/\d{2}\s\d{2}:\d{2}:\d{2}\.\d{3})\s+(?P<process_id>\d+)\s+(?P<thread_id>\d+)\s+(?P<log_level>[A-Z]+\d*)\s+(?P<component>[^\:]+)\:\s+(?P<message>.+)
+  FORMAT = start_time::$1 process_id::$2 thread_id::$3 log_level::$4 component::$5 message::$6
+  
+  [teamviewer_extractions_logfile_ip]
+  REGEX = punch received from (?P<src_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})
+  FORMAT = src_ip::$1
+  
+  [teamviewer_extractions_logfile_failed_connection]
+  REGEX = Trying connection to (?P<dest_teamviewer_id>\d+)
+  FORMAT = dest_teamviewer_id::$1
+  
+  [teamviewer_extractions_logfile_successful_session]
+  REGEX = New Participant added in CParticipantManager (?P<dest_participant_teamviewer_id>\d+)
+  FORMAT = dest_participant_teamviewer_id::$1
+  
+  [teamviewer_extractions_logfile_source_teamviewer_id]
+  REGEX = Login::Identify (?P<src_teamviewer_id>\d+)
+  FORMAT = src_teamviewer_id::$1
+
+  [teamviewer_extractions_connections]
+  REGEX = ^(?P<session_id>\d+)\s+(?P<start_time>\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}:\d{2})\s+(?P<end_time>\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}:\d{2})\s+(?P<src_user>[^\s]+)\s+(?P<action>[^\s]+)\s+(?P<session_guid>\{[^\}]+\})
+  FORMAT = session_id::$1 start_time::$2 end_time::$3 src_user::$4 action::$5 session_guid::$6 src_nt_host::$host
